@@ -36,8 +36,10 @@ const getAudioDataById = (req, res, db) => {
                       uploadError: 'Sorry! that file has not yet beed uploaded'
                   })
               }
+              console.log('err', err)
             }
-
+         console.log('data', data)
+         
           let response = {
               audio: data.Body,
               title: data.Metadata['x-amz-meta-title'],
