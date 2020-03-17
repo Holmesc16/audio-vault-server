@@ -31,8 +31,11 @@ const getAudioDataById = (req, res, db) => {
 
        let url = s3.getSignedUrl('getObject', getParams)
        console.log('the url is', url)
-      
-        res.send(url)
+        
+       let response = {
+           url
+       }
+        res.send(response)
     } catch (e) {
     console.log('err', e)
     }   
