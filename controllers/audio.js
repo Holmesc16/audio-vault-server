@@ -29,25 +29,10 @@ const getAudioDataById = (req, res, db) => {
             Key: id
         }
 
-        s3.getObject(getParams, function(err, data) {
-          if (err) {
-              if(err === 'NoSuchKey: The specified key does not exist.') {
-                  res.send({
-                      uploadError: 'Sorry! that file has not yet beed uploaded'
-                  })
-              }
-              console.log('err', err)
-            }
-         console.log('data', data)
-         
-          let response = {
-              audio: data.Body,
-              title: data.Metadata['x-amz-meta-title'],
-              date: data.Metadata['x-amz-meta-date'],
-              tags: data.Metadata['x-amz-meta-tags']
-          }
-          res.send(response)
-        });
+       let url = s3.getSignedUrl('getObject', getParams)
+       console.log('the url is', url)
+      
+        res.send(url)
     } catch (e) {
     console.log('err', e)
     }   
