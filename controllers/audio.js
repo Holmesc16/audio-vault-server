@@ -1,5 +1,6 @@
 const aws = require('aws-sdk')
 const chalk = require('chalk')
+const _ = require('lodash')
 require('dotenv').config()
 
 const getAudioData = (req, res, db ) => {
@@ -84,6 +85,14 @@ const searchAudioData = (req, res, db) => {
 
 const getAudioByTagName = (req, res, db) => {
     let tagName = req.query.tag
+
+    let r = db.query(`SELECT Tags FROM Audio`).then(response => {
+        let allTags = _.flatten([...response.rows].map(arr => arr.tags.split(',')))
+        let tagSet = new Set();
+        allTags.map(tag => tagSet.add(tag));
+        let s = [...tagSet].sort((a,b) => a.charAt(0) > b.charAt(0) ? a : b)
+        res.send({tags: s})       
+    })
 }
 
 module.exports = {
@@ -92,5 +101,6 @@ module.exports = {
     postAudioData,
     putAudioData,
     deleteAudioData,
-    searchAudioData
+    searchAudioData,
+    getAudioByTagName
 } 

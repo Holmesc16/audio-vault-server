@@ -46,7 +46,7 @@ app.get('/search', (req, res) => audio.searchAudioData(req, res, client))
 app.post('/audio/upload', (req, res) => audio.postAudioData(req, res, client))
 app.put('/audio/update/:id', (req, res) => audio.putAudioData(req, res, client))
 app.delete('/audio/delete/:id', (req, res) => audio.deleteAudioData(req, res, client))
-
+app.get('/tags/:tag', (req, res) => audio.getAudioByTagName(req, res, client))
 // App Server Connection
 app.listen(process.env.PORT || 5000, () => {
   console.log(`app is running on port ${process.env.PORT || 5000}`)
