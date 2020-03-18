@@ -77,10 +77,15 @@ const searchAudioData = (req, res, db) => {
          (err, response) => {
             if(err) res.send(err)
             response.rows === 'undefined' 
-            ? res.send(`No results found for ${keyword}`) 
+            ? res.send({ message: `No results found for ${keyword}`}) 
             : res.send(response.rows)
               })
 }
+
+const getAudioByTagName = (req, res, db) => {
+    let tagName = req.query.tag
+}
+
 module.exports = {
     getAudioData,
     getAudioDataById,
