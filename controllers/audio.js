@@ -67,7 +67,7 @@ const deleteAudioData = (req, res, db) => {
 }
 
 const searchAudioData = (req, res, db) => {
-    let keyword = req.query.keyword
+    let keyword = req.query.keyword.toLowerCase()
     db.query(`SELECT * FROM AUDIO 
                 WHERE title LIKE $1 
                 OR date LIKE $1 
@@ -83,16 +83,41 @@ const searchAudioData = (req, res, db) => {
               })
 }
 
-const getAudioByTagName = (req, res, db) => {
-    let tagName = req.query.tag
+// const getAudioByTagName = (req, res, db) => {
+//     let tagName = req.query.tag
 
-    let r = db.query(`SELECT Tags FROM Audio`).then(response => {
-        let allTags = _.flatten([...response.rows].map(arr => arr.tags.split(',')))
-        let tagSet = new Set();
-        allTags.map(tag => tagSet.add(tag));
-        let s = [...tagSet].sort((a,b) => a.charAt(0) > b.charAt(0) ? a : b)
-        res.send({tags: s})       
-    })
+//     let r = db.query(`SELECT Tags FROM Audio WHERE tagName like $1`, ['%' + tagName + '%']).then(response => {
+//         let allTags = _.flatten([...response.rows].map(arr => arr.tags.split(',')))
+//         allTags = allTags.map(s => `(${s})`)
+//         let tagSet = new Set();
+//         allTags.map(tag => tagSet.add(tag));
+//         let orderedTags = [...tagSet].sort()
+//         res.send(orderedTags)
+//     })
+// }
+
+// const getAllTags = (req, res, db) => {
+//     let r = db.query(`select tags from audio where audio.tags is not null and tags <> '' order by dateAdded desc`)
+//     .then(response => {
+//         let allTags = _.flatten([...response.rows].map(arr => arr.tags.split(',')))
+//         allTags = allTags.map(s => `(${s})`)
+//         let tagSet = new Set();
+//         allTags.map(tag => tagSet.add(tag));
+//         let orderedTags = [...tagSet].sort()
+//         res.send(orderedTags)
+//     })
+// }
+const getAudioByTagName = (req, res, db) => {
+    let tagName = req.params.tag
+    console.log(chalk.red(tagName))
+    db.query(`select * from audio where tags like $1`,
+    ['%' + tagName + '%'],
+    (err, response) => {
+        if(err) res.send(err)
+        response.rows === 'undefined' 
+        ? res.send({ message: `No results found for ${tagName}`}) 
+        : res.send(response.rows)
+          })
 }
 
 module.exports = {
