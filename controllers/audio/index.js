@@ -3,17 +3,30 @@ const chalk = require('chalk')
 const _ = require('lodash')
 require('dotenv').config()
 
-const getAudioData = (req, res, db ) => {
-    db.query(`SELECT DISTINCT 
-            title, CAST(date as DATE) AS formattedDate, date, tags, description 
-            FROM audio ORDER BY CAST(date as DATE) DESC`, (err, response) => {
-        if(err) {
-            console.log('error!!!', err)
-            res.send(err)
-        }
-        res.send(response.rows)
-    })
+const getAudioData = (req, res, db) => {
+    db.query(`SELECT DISTINCT
+            audio_title, CAST(audio_date as DATE) AS formattedDate, audio_date, audio_tags, s3_key
+            FROM s3Audio ORDER BY CAST(audio_date as DATE) DESC`, (err, response) => {
+                if(err) {
+                    console.log('error!', err)
+                    res.send(err)
+                }
+                console.log(response)
+                res.send(response.rows)
+            })
 }
+
+// const getAudioData = (req, res, db ) => {
+//     db.query(`SELECT DISTINCT 
+//             title, CAST(date as DATE) AS formattedDate, date, tags, description 
+//             FROM audio ORDER BY CAST(date as DATE) DESC`, (err, response) => {
+//         if(err) {
+//             console.log('error!!!', err)
+//             res.send(err)
+//         }
+//         res.send(response.rows)
+//     })
+// }
 const getAudioDataById = (req, res, db) => {
     const id = req.params.id
 
@@ -68,12 +81,11 @@ const deleteAudioData = (req, res, db) => {
 
 const searchAudioData = (req, res, db) => {
     let keyword = req.query.keyword.toLowerCase()
-    db.query(`SELECT * FROM AUDIO 
-                WHERE title LIKE $1 
-                OR date LIKE $1 
-                OR tags LIKE $1 
-                OR description LIKE $1
-                ORDER BY CAST(date as DATE) DESC
+    db.query(`SELECT * FROM s3Audio 
+                WHERE audio_title LIKE $1 
+                OR audio_date LIKE $1 
+                OR audio_tags LIKE $1
+                ORDER BY CAST(audio_date as DATE) DESC
                 `, ['%' + keyword + '%'],
          (err, response) => {
             if(err) res.send(err)
@@ -110,7 +122,7 @@ const searchAudioData = (req, res, db) => {
 const getAudioByTagName = (req, res, db) => {
     let tagName = req.params.tag
     console.log(chalk.red(tagName))
-    db.query(`select * from audio where tags like $1`,
+    db.query(`select * from s3Audio where audio_tags like $1`,
     ['%' + tagName + '%'],
     (err, response) => {
         if(err) res.send(err)

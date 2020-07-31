@@ -6,6 +6,7 @@ const cors = require('cors')  // allows/disallows cross-site communication
 const morgan = require('morgan') // logs requests
 const { Pool, Client } = require('pg')
 const audio = require('./controllers/audio')
+const users = require('./controllers/users')
 const app = express()
 
 // heroku 
@@ -38,7 +39,7 @@ let allowCrossDomain = function(req, res, next) {
   }
   app.use(allowCrossDomain);
 
-// App Routes - Audio
+// Audio
 app.get('/', (req, res) => audio.getAudioData(req, res, client))
 app.get('/audio', (req, res) => audio.getAudioData(req, res, client))
 app.get('/file/:id', (req, res)=> audio.getAudioDataById(req, res, client))
@@ -47,6 +48,12 @@ app.post('/audio/upload', (req, res) => audio.postAudioData(req, res, client))
 app.put('/audio/update/:id', (req, res) => audio.putAudioData(req, res, client))
 app.delete('/audio/delete/:id', (req, res) => audio.deleteAudioData(req, res, client))
 app.get('/tags/:tag', (req, res) => audio.getAudioByTagName(req, res, client))
+
+// Users
+app.post('/signup', (req, res) => users.signup(req, res, client))
+app.post('/signin', (req, res)=> users.signin(req, res, client))
+
+
 // App Server Connection
 app.listen(process.env.PORT || 5000, () => {
   console.log(`app is running on port ${process.env.PORT || 5000}`)
