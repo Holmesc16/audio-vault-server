@@ -1,6 +1,7 @@
 
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
+const chalk = require('chalk')
 
 const hashPassword = password => {
     return new Promise((resolve, reject) => {
@@ -11,8 +12,8 @@ const hashPassword = password => {
 }
 
 const createUser = (user, db) => {
-    return db.query(`INSERT INTO users(username, password_digest, token, created_at) VALUES ($1, $2, $3, $4) RETURNING id, username, created_at, password_digest, token`,
-    [user.username, user.password_digest, user.token, new Date()]
+    return db.query(`INSERT INTO users(username, email, password_digest, token, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, created_at, password_digest, token`,
+    [user.username, user.emailAddress, user.password_digest, user.token, new Date()]
     )
     .then(data => {
         return data.rows[0]
@@ -28,11 +29,14 @@ const createToken = () => {
 }
 
 const findUser = (userRequest, db) => {
+    console.log(chalk.red(JSON.stringify(userRequest)))
     return db.query(`SELECT * FROM users WHERE username = $1`, [userRequest.username])
         .then(data => data.rows[0])
+        .catch(err => {err})
 }
 
 const checkPassword = (requestPassword, foundUser) => {
+    console.log(chalk.hex('#ffcc22')(requestPassword, JSON.stringify(foundUser)))
     return new Promise((resolve, reject) => {
         bcrypt.compare(requestPassword, foundUser.password_digest, (err, response) => {
             if(err) reject(err)

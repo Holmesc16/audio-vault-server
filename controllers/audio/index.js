@@ -1,6 +1,8 @@
 const aws = require('aws-sdk')
 const chalk = require('chalk')
 const _ = require('lodash')
+const { response } = require('express')
+const { reject } = require('lodash')
 require('dotenv').config()
 
 const getAudioData = (req, res, db) => {
@@ -11,7 +13,6 @@ const getAudioData = (req, res, db) => {
                     console.log('error!', err)
                     res.send(err)
                 }
-                console.log(response)
                 res.send(response.rows)
             })
 }
@@ -43,9 +44,7 @@ const getAudioDataById = (req, res, db) => {
             Key: id
         }
 
-       let url = s3.getSignedUrl('getObject', getParams)
-       console.log('the url is', url)
-        
+       let url = s3.getSignedUrl('getObject', getParams)        
        let response = {
            url
        }
@@ -95,33 +94,74 @@ const searchAudioData = (req, res, db) => {
               })
 }
 
-// const getAudioByTagName = (req, res, db) => {
-//     let tagName = req.query.tag
+const getUserFavorites = (req, res, db) => {
+    const { user } = req.params
+    if(!user) console.log('no user')
+    db.query(`SELECT favorites FROM users
+        WHERE username = $1
+    `, [user],
+        (err, response) => {
+            if(err) {
+                console.log(chalk.red(err))
+                res.send(err)
+            }
+            response.rows === 'undefined' || !response.rows.length
+            ? res.send({message: 'No favorites yet - add audio to your favorites by clicking the "like" button'})
+            : res.send(response.rows)
+        })
+}
 
-//     let r = db.query(`SELECT Tags FROM Audio WHERE tagName like $1`, ['%' + tagName + '%']).then(response => {
-//         let allTags = _.flatten([...response.rows].map(arr => arr.tags.split(',')))
-//         allTags = allTags.map(s => `(${s})`)
-//         let tagSet = new Set();
-//         allTags.map(tag => tagSet.add(tag));
-//         let orderedTags = [...tagSet].sort()
-//         res.send(orderedTags)
-//     })
-// }
+const putAudioFavorites = (req, res, db) => {
+    return new Promise((resolve, reject) => {
+        const { user, title, userFavorites } = req.body
+        resolve({user, title, userFavorites})
+        reject(err => console.log('there was an error: ', err))
+    })
+    .then(data => {
+        return new Promise((resolve, reject) => {
+            db.query(`SELECT favorites FROM users WHERE username = $1`,
+            [data.user],
+            (err, response) => {
+                resolve({data, response: response.rows})
+                reject(() => console.log(chalk.red(err)))
+            })
+        })
+        .then(payload => {
+            if(payload.response[0].favorites === null) {
+                db.query(`UPDATE users SET favorites = $1 WHERE username = $2`,
+                [payload.data.title, payload.data.user],
+                (err, response) => {
+                    if(err) console.log(chalk.red(err))
+                    return response.rows
+                })
+            } 
+            else {
+               let existingFavorites = new Promise((resolve, reject) => {
+                db.query(`SELECT favorites from users where username = $1`,
+                [payload.data.user],
+                (err, response) => {
+                    if(err) return err
+                    resolve(response.rows)
+                    reject(err => err)
+                    return response.rows     
+                    }) 
+                })
+             return existingFavorites
+                .then(data => {
+                    let favesArray = []
+                    data.map(f => favesArray.push(f.favorites))
+                    console.log(favesArray)
+                    res.send(favesArray)
+                })
+            }
+        })
+    })
+    
+    
+}
 
-// const getAllTags = (req, res, db) => {
-//     let r = db.query(`select tags from audio where audio.tags is not null and tags <> '' order by dateAdded desc`)
-//     .then(response => {
-//         let allTags = _.flatten([...response.rows].map(arr => arr.tags.split(',')))
-//         allTags = allTags.map(s => `(${s})`)
-//         let tagSet = new Set();
-//         allTags.map(tag => tagSet.add(tag));
-//         let orderedTags = [...tagSet].sort()
-//         res.send(orderedTags)
-//     })
-// }
 const getAudioByTagName = (req, res, db) => {
     let tagName = req.params.tag
-    console.log(chalk.red(tagName))
     db.query(`select * from s3Audio where audio_tags like $1`,
     ['%' + tagName + '%'],
     (err, response) => {
@@ -139,5 +179,7 @@ module.exports = {
     putAudioData,
     deleteAudioData,
     searchAudioData,
-    getAudioByTagName
+    getAudioByTagName,
+    getUserFavorites,
+    putAudioFavorites
 } 

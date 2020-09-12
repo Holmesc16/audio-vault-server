@@ -1,3 +1,5 @@
+const chalk = require('chalk')
+const cookieParser = require('cookie-parser')
 const {createToken,
        createUser,
        hashPassword,
@@ -24,6 +26,7 @@ const signup = (req, res, db) => {
     .then(() => createToken())
     .then(token => {
         user.token = token
+        return user.token
     })
     .then(() => createUser(user, db))
     .then(user => {
@@ -40,6 +43,7 @@ const signin = (req, res, db) => {
 
     findUser(userRequest, db)
         .then(foundUser => {
+            console.log(chalk.cyan(foundUser))
             user = foundUser
             return checkPassword(userRequest.password, foundUser)
         })
