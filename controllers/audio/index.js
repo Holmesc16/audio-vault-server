@@ -111,6 +111,20 @@ const getUserFavorites = (req, res, db) => {
         })
 }
 
+const putUserFavorites = (req, res, db) => { 
+        const { user, userFavorites } = req.body
+        const { username } = user
+        db.query(`UPDATE users
+        SET favorites = '${userFavorites}'
+        WHERE username = '${username}'`),
+        (err, response) => {
+            if(err) return err
+            resolve(response.rows)
+            reject(err => err)
+            return response.rows  
+        }
+}
+
 const putAudioFavorites = (req, res, db) => {
     return new Promise((resolve, reject) => {
         const { user, title, userFavorites } = req.body
@@ -181,5 +195,6 @@ module.exports = {
     searchAudioData,
     getAudioByTagName,
     getUserFavorites,
-    putAudioFavorites
+    putAudioFavorites,
+    putUserFavorites
 } 

@@ -52,7 +52,7 @@ app.get('/tags/:tag', (req, res) => audio.getAudioByTagName(req, res, client))
 // Favorites
 app.get('/favorites/:user', (req, res) => audio.getUserFavorites(req, res, client))
 app.post('/favorites/update', (req, res) => audio.putAudioFavorites(req, res, client))
-
+app.post('/favorites/put', (req, res) => audio.putUserFavorites(req, res, client))
 // Users
 app.post('/signup', (req, res) => users.signup(req, res, client))
 app.post('/signin', (req, res)=> users.signin(req, res, client))
