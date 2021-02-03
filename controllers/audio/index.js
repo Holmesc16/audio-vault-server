@@ -43,12 +43,34 @@ const getAudioDataById = (req, res, db) => {
             Bucket: 'the-audio-vault',
             Key: id
         }
-
-       let url = s3.getSignedUrl('getObject', getParams)        
-       let response = {
-           url
-       }
-        res.send(response)
+        // trying to see if bassing raw Buffer of audio will allow for
+        // audio clipping on the client-side
+        return new Promise((resolve, reject) => {
+            let url = s3.getSignedUrl('getObject', getParams)
+            resolve(url)
+            reject(err => console.log(`error getting url, ${err}`))
+            return url
+        })
+        .then(async url => {
+            return await s3.getObject(getParams).promise()
+                .then((response) => {
+                    return {
+                        url,
+                        buffer: response.Body //.toString('utf-8')
+                    }
+                })
+                .catch((err) => {
+                    return err;
+                });
+        })
+        .then(audioUrlAndBuffer => {
+            try {
+                res.send(audioUrlAndBuffer)
+            }
+            catch(err) {
+                console.log('error sending data', err)
+            }
+        })
     } catch (e) {
     console.log('err', e)
     }   

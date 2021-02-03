@@ -62,6 +62,7 @@ module.exports = {
     hashPassword,
     findUser,
     checkPassword,
-    updateUserToken
+    updateUserToken,
+    findByToken
 }
 
