@@ -39,38 +39,18 @@ const getAudioDataById = (req, res, db) => {
         })
 
         const s3 = new aws.S3()
-        var getParams = { 
+        var getParams = {  
             Bucket: 'the-audio-vault',
             Key: id
         }
         // trying to see if bassing raw Buffer of audio will allow for
         // audio clipping on the client-side
-        return new Promise((resolve, reject) => {
-            let url = s3.getSignedUrl('getObject', getParams)
-            resolve(url)
-            reject(err => console.log(`error getting url, ${err}`))
-            return url
-        })
-        .then(async url => {
-            return await s3.getObject(getParams).promise()
-                .then((response) => {
-                    return {
-                        url,
-                        buffer: response.Body //.toString('utf-8')
-                    }
-                })
-                .catch((err) => {
-                    return err;
-                });
-        })
-        .then(audioUrlAndBuffer => {
-            try {
-                res.send(audioUrlAndBuffer)
-            }
-            catch(err) {
-                console.log('error sending data', err)
-            }
-        })
+        let url = s3.getSignedUrl("getObject", getParams);
+        s3.getObject(getParams).promise()
+            .then(response => res.send({
+                url,
+                buffer: response.Body
+            }))
     } catch (e) {
     console.log('err', e)
     }   
