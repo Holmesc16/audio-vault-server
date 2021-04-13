@@ -43,14 +43,10 @@ const getAudioDataById = (req, res, db) => {
             Bucket: 'the-audio-vault',
             Key: id
         }
-        // trying to see if bassing raw Buffer of audio will allow for
-        // audio clipping on the client-side
+
         let url = s3.getSignedUrl("getObject", getParams);
         s3.getObject(getParams).promise()
-            .then(response => res.send({
-                url,
-                buffer: response.Body
-            }))
+            .then(() => res.send({url}))
     } catch (e) {
     console.log('err', e)
     }   
@@ -94,6 +90,35 @@ const searchAudioData = (req, res, db) => {
             ? res.send({ message: `No results found for ${keyword}`}) 
             : res.send(response.rows)
               })
+}
+
+const getSimiliarAudioByDateProximity = async (req, res, db) => {
+    const { date } = req.body
+    console.log(req.body)
+    await db.query(`select string_to_array(audio_title, ' ') as val_arr FROM (
+                select rtrim(ltrim(replace(replace(translate(audio_title,'0123456789',''), '.', ''), '  ', ' '))) as audio_title FROM (
+                   select * from s3Audio where audio_date 
+                       like CONCAT('%', ltrim(rtrim(replace(translate($1,'0123456789',''), ',', ''))), '%') limit 3
+                   ) A
+               ) B`, [date])
+        .then(({ rows }) => {
+            rows = _.flatMap(rows.map(r => _.flatMap(r)))    
+            return rows        
+        })
+        .then(async (keywords) => {
+            const results = new Set()
+            const getSimilarKeywords = async (keyword) => {
+                await db.query(`select * from s3Audio where audio_title like $1 limit 5`, [`%${keyword}%`])
+                .then(kw => results.add(kw.rows))
+            }
+            await Promise.all(keywords.map(kw => getSimilarKeywords(kw)))
+            return [...results]
+        })
+        .then(similarKeywords => {
+           let flat = _.flatMap(similarKeywords)
+           let shuffle = _.shuffle(flat)
+            res.send(shuffle)
+        })
 }
 
 const getUserFavorites = (req, res, db) => {
@@ -191,6 +216,7 @@ const getAudioByTagName = (req, res, db) => {
 module.exports = {
     getAudioData,
     getAudioDataById,
+    getSimiliarAudioByDateProximity,
     postAudioData,
     putAudioData,
     deleteAudioData,
