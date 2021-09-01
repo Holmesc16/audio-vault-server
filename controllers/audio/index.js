@@ -1,8 +1,10 @@
 const aws = require('aws-sdk')
 const chalk = require('chalk')
+const moment = require('moment')
 const _ = require('lodash')
 const { response } = require('express')
 const { reject } = require('lodash')
+const getClip = require('../../handlers/s3/getClip')
 require('dotenv').config()
 
 const getAudioData = (req, res, db) => {
@@ -213,6 +215,32 @@ const getAudioByTagName = (req, res, db) => {
           })
 }
 
+const getRandomOrderOfTags = (req, res, db) => {
+    db.query(`select * from tags where tagname !~ '[0-9]' order by RANDOM() asc limit 250`, (err, response) => {
+                if(err) res.send(err)
+                response.rows === 'undefined' 
+                ? res.status(404).send({ message: `No results found`}) 
+                : res.send(response.rows)
+            })
+}
+
+const postNewAudioClip = async (req, res, db) => {
+    // adding segment date (below)
+    const url = req.body.url
+    const clipName = req.body.clipName
+    const tags = req.body.tags.map(t => t.name).join(', ')
+    const segmentDate = req.body.segmentDate
+    const username = req.body.user.username
+    const segmentStart = req.body.segmentStart
+    const segmentEnd = req.body.segmentEnd
+    const description = req.body.description || 'null'
+    let s3Data = await getClip(url, clipName, description, tags, segmentStart, segmentEnd)
+
+    // insert into postgres here w/ user info as well
+    db.query(`insert into s3Audio (s3_key, s3_etag, s3_lastmodified, audio_date, audio_title, userid, username)
+    values ($1, $2, $3, $4, $5, $6,  $7) `, [s3Data.Key, s3Data.ETag, moment().format(), segmentDate, clipName, null, username])
+}
+
 module.exports = {
     getAudioData,
     getAudioDataById,
@@ -224,5 +252,7 @@ module.exports = {
     getAudioByTagName,
     getUserFavorites,
     putAudioFavorites,
-    putUserFavorites
+    putUserFavorites,
+    getRandomOrderOfTags,
+    postNewAudioClip
 } 

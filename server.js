@@ -49,6 +49,8 @@ app.put('/audio/update/:id', (req, res) => audio.putAudioData(req, res, client))
 app.delete('/audio/delete/:id', (req, res) => audio.deleteAudioData(req, res, client))
 app.get('/tags/:tag', (req, res) => audio.getAudioByTagName(req, res, client))
 app.post('/audio/similar', (req, res) => audio.getSimiliarAudioByDateProximity(req, res, client))
+app.get('/tags', (req, res) => audio.getRandomOrderOfTags(req, res, client))
+app.post('/clip', (req, res) => audio.postNewAudioClip(req, res, client))
 // Favorites
 app.get('/favorites/:user', (req, res) => audio.getUserFavorites(req, res, client))
 app.post('/favorites/update', (req, res) => audio.putAudioFavorites(req, res, client))

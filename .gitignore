@@ -1,3 +1,4 @@
 node_modules
 .env
 .tags
+handlers/s3/clips/*
