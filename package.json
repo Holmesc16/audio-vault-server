@@ -16,7 +16,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "audio-decode": "^1.4.0",
-    "aws-sdk": "^2.636.0",
+    "aws-sdk": "^2.814.0",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "buffer-to-arraybuffer": "0.0.5",
